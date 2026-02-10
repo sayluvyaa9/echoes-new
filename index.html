@@ -39,6 +39,17 @@
       </div>
 
       <button class="btn btn-primary w-100" onclick="calculate()">คำนวณ</button>
+      <button class="btn btn-primary w-100" onclick="calculate()">คำนวณ</button>
+
+      <!-- ตารางเลือกส่วนลด -->
+      <div id="discountTable" class="mt-3"></div>
+      <button class="btn btn-secondary mt-2" onclick="applyDiscounts()">คำนวณส่วนลด</button>
+
+      <div class="mt-4">
+        <h5>ผลลัพธ์:</h5>
+        <div id="result" class="bg-white p-3 border rounded"></div>
+      </div>
+
 
       <div class="mt-4">
         <h5>ผลลัพธ์:</h5>
@@ -207,19 +218,73 @@ if (mode==="budget") options.push({desc,echoes,topup,price,packs});
     let deadline = new Date("2026-02-23T23:59:59");
 
     if (mode === "buttons") {
-      calculateButtons(priceMode);
-    } else if (mode === "topup") {
-      calculateTopup(priceMode);
-    } else if (mode === "budget") {
-      calculateBudget(priceMode);
-    } else if (mode === "discount") {
-      if (today <= deadline) {
-        calculateDiscount(priceMode);
-      } else {
-        document.getElementById("result").innerHTML =
-          "<p>สิทธิ์ส่วนลดหมดเขตแล้ว ไม่สามารถใช้งานได้</p>";
-      }
-    }
+  calculateButtons(priceMode);
+} else if (mode === "topup") {
+  calculateTopup(priceMode);
+} else if (mode === "budget") {
+  calculateBudget(priceMode);
+} else if (mode === "discount") {
+  if (today <= deadline) {
+    // เรียกฟังก์ชันสร้างตารางเลือกส่วนลด
+    showDiscountOptions(priceMode);
+  } else {
+    document.getElementById("result").innerHTML =
+      "<p>สิทธิ์ส่วนลดหมดเขตแล้ว ไม่สามารถใช้งานได้</p>";
   }
-</script>
+}
 
+function showDiscountOptions(priceMode) {
+  let packs = Object.keys(discountTable).map(Number);
+  let html = "<table class='table table-bordered'><thead><tr><th>แพ็ก</th><th>ราคาปกติ</th><th>เลือกส่วนลด</th></tr></thead><tbody>";
+
+  packs.forEach(pack => {
+    let basePrice = getPriceTable(priceMode)[pack] || 0;
+    html += `<tr>
+      <td>${pack}</td>
+      <td>${basePrice} บาท</td>
+      <td>
+        <select id="discount-${pack}" class="form-select">
+          <option value="none">ไม่ใช้ส่วนลด</option>
+          <option value="3">3%</option>
+          <option value="10">10%</option>
+        </select>
+      </td>
+    </tr>`;
+  });
+
+  html += "</tbody></table>";
+  document.getElementById("discountTable").innerHTML = html;
+}
+
+function applyDiscounts() {
+  let packs = Object.keys(discountTable).map(Number);
+  let totalPrice = 0, totalEchoes = 0, totalTopup = 0, totalPacks = 0;
+  let rows = "";
+
+  packs.forEach(pack => {
+    let choice = document.getElementById(`discount-${pack}`).value;
+    let basePrice = getPriceTable(document.getElementById("priceMode").value)[pack] || 0;
+    let finalPrice = basePrice;
+
+    if (choice === "3") finalPrice = discountTable[pack].p3;
+    else if (choice === "10") finalPrice = discountTable[pack].p10;
+
+    if (choice !== "none") {
+      totalPrice += finalPrice;
+      totalEchoes += pack;
+      totalTopup += echoTopup[pack] || 0;
+      totalPacks += 1;
+      rows += `<tr><td>${pack}</td><td>${basePrice}</td><td>${finalPrice}</td></tr>`;
+    }
+  });
+
+  let html = "<table class='table table-bordered'><thead><tr><th>แพ็ก</th><th>ราคาปกติ</th><th>ราคาหลังส่วนลด</th></tr></thead><tbody>";
+  html += rows + "</tbody></table>";
+  html += `<p>รวมราคา: ${totalPrice} บาท</p>`;
+  html += `<p>กระดุมรวม: ${totalEchoes}</p>`;
+  html += `<p>ยอดเติมเสียงสะท้อนรวม: ${totalTopup}</p>`;
+  html += `<p>จำนวนสิทธิ์สุ่มที่ได้: ${totalPacks}</p>`;
+  document.getElementById("result").innerHTML = html;
+}
+
+</script>
