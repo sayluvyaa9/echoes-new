@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>เครื่องคำนวณ Echoes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- โหลด Bootstrap เพื่อให้เว็บสวยและรองรับมือถือ -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container py-5">
+  <div class="card shadow">
+    <div class="card-body">
+      <h2 class="card-title text-center mb-4">เครื่องคำนวณแพ็กเกจ Echoes</h2>
+
+      <!-- ฟอร์มกรอกจำนวน -->
+      <div class="mb-3">
+        <label for="echoesInput" class="form-label">จำนวนกระดุมที่ต้องการ</label>
+        <input type="number" id="echoesInput" class="form-control" placeholder="เช่น 2618">
+      </div>
+      <button class="btn btn-primary w-100" onclick="calculate()">คำนวณ</button>
+
+      <!-- ผลลัพธ์ -->
+      <div class="mt-4">
+        <h5>ผลลัพธ์:</h5>
+        <div id="result" class="bg-white p-3 border rounded"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ข้อมูลแพ็กเกจ
+  const packages = [
+    { echoes: 66, price: 30 },
+    { echoes: 203, price: 85 },
+    { echoes: 335, price: 140 },
+    { echoes: 759, price: 280 } // base price
+  ];
+
+  function getBigPackPrice(count) {
+    if (count > 25) return 275;
+    if (count > 15) return 278;
+    return 280;
+  }
+
+  function calculate() {
+    let needed = parseInt(document.getElementById("echoesInput").value);
+    if (isNaN(needed) || needed <= 0) {
+      document.getElementById("result").innerText = "กรุณากรอกจำนวนกระดุมที่ถูกต้อง";
+      return;
+    }
+
+    let result = [];
+    let bigCount = Math.floor(needed / 759);
+    let bigPrice = getBigPackPrice(bigCount);
+    let totalPrice = bigCount * bigPrice;
+    let totalEchoes = bigCount * 759;
+
+    if (bigCount > 0) {
+      result.push(`<tr><td>759</td><td>${bigCount}</td><td>${bigPrice}</td><td>${bigCount * bigPrice}</td></tr>`);
+    }
+
+    // เติมเศษด้วยแพ็กเล็กที่คุ้มค่าที่สุด
+    let remaining = needed - totalEchoes;
+
+    // เลือกแพ็กเล็กที่ทำให้จำนวนรวมเกินพอดี โดยไม่ใช้ซ้ำหลายครั้ง
+    let bestPack = null;
+    for (let i = packages.length - 2; i >= 0; i--) {
+      if (remaining <= packages[i].echoes) {
+        bestPack = packages[i];
+      }
+    }
+
+    if (bestPack) {
+      totalPrice += bestPack.price;
+      totalEchoes += bestPack.echoes;
+      result.push(`<tr><td>${bestPack.echoes}</td><td>1</td><td>${bestPack.price}</td><td>${bestPack.price}</td></tr>`);
+    }
+
+    // ถ้ายังไม่ถึง → บวกเพิ่มอีกแพ็กเล็กสุด
+    if (totalEchoes < needed) {
+      totalPrice += packages[0].price;
+      totalEchoes += packages[0].echoes;
+      result.push(`<tr><td>${packages[0].echoes}</td><td>1</td><td>${packages[0].price}</td><td>${packages[0].price}</td></tr>`);
+    }
+
+    // แสดงผลลัพธ์เป็นตาราง
+    document.getElementById("result").innerHTML = `
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>จำนวนกระดุมต่อแพ็ก</th>
+            <th>จำนวนแพ็ก</th>
+            <th>ราคา/แพ็ก</th>
+            <th>รวมราคา</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${result.join("")}
+        </tbody>
+      </table>
+      <p><strong>รวมทั้งหมด:</strong> ${totalEchoes} กระดุม</p>
+      <p><strong>ราคารวม:</strong> ${totalPrice} บาท</p>
+    `;
+  }
+</script>
+
+</body>
+</html>
