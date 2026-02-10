@@ -146,9 +146,12 @@ for (let i = 0; i < 5; i++) {
 
 
 
-  function applyDiscounts() {
+ function applyDiscounts() {
   let totalPrice = 0, totalEchoes = 0, totalTopup = 0, totalPacks = 0;
   let rows = "";
+
+  // ประกาศ priceMode ตรงนี้
+  let priceMode = document.getElementById("priceMode").value;
 
   document.querySelectorAll("#discountRows .row").forEach(row => {
     let index = row.id.split("-")[1];
@@ -157,12 +160,11 @@ for (let i = 0; i < 5; i++) {
 
     if (!pack) return;
 
-    let basePrice = getPriceTable(document.getElementById("priceMode").value)[pack] || 0;
+    let basePrice = getPriceTable(priceMode)[pack] || 0;
     let finalPrice = basePrice;
 
     if (choice === "3") finalPrice = discountTable[priceMode][pack].p3;
-else if (choice === "10") finalPrice = discountTable[priceMode][pack].p10;
-
+    else if (choice === "10") finalPrice = discountTable[priceMode][pack].p10;
 
     totalPrice += finalPrice;
     totalEchoes += pack;
@@ -180,6 +182,7 @@ else if (choice === "10") finalPrice = discountTable[priceMode][pack].p10;
   html += `<p>จำนวนสิทธิ์สุ่มที่ได้: ${totalPacks}</p>`;
   document.getElementById("result").innerHTML = html;
 }
+
 
   
   // ===== ฟังก์ชันหลัก =====
@@ -279,6 +282,7 @@ else if (choice === "10") finalPrice = discountTable[priceMode][pack].p10;
 </script>
 </body>
 </html>
+
 
 
 
