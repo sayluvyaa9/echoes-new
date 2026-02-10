@@ -41,19 +41,13 @@
       <!-- ปุ่มคำนวณเดียว -->
       <button class="btn btn-primary w-100" onclick="calculate()">คำนวณ</button>
 
-     <!-- ตารางเลือกส่วนลดแบบ dynamic -->
-<div id="discountFormContainer" class="mt-3" style="display:none;">
-  <form id="discountForm">
-    <div id="discountRows"></div>
-    <button type="button" class="btn btn-secondary mt-2" onclick="addRow()">เพิ่มช่อง</button>
-  </form>
-</div>
-
-      function resetDiscountForm() {
-  document.getElementById("discountRows").innerHTML = "";
-  rowCount = 0;
-}
-
+      <!-- ตารางเลือกส่วนลดแบบ dynamic -->
+      <div id="discountFormContainer" class="mt-3" style="display:none;">
+        <form id="discountForm">
+          <div id="discountRows"></div>
+          <button type="button" class="btn btn-secondary mt-2" onclick="addRow()">เพิ่มช่อง</button>
+        </form>
+      </div>
 
       <div class="mt-4">
         <h5>ผลลัพธ์:</h5>
@@ -64,24 +58,56 @@
 </div>
 
 <script>
-  const echoTopup = { 66: 60, 203: 185, 335: 305, 759: 690, 2227: 2000, 3663: 3300, 7249: 6600 };
+  const echoTopup = { 66: 60, 203: 185, 335: 305, 759: 690, 2227: 2025, 3663: 3330, 7249: 6590 };
 
-  const preorderPrices = { 66: 31, 203: 88, 335: 146, 759: 295, 2227: 880, 3663: 1460, 7249: 2920 };
-  const normalPrices = { 66: 35, 203: 105, 335: 170, 759: 340 };
+  // ราคาพร้อมเติม (Normal)
+const normalPrices = {
+  66: 35,
+  203: 105,
+  335: 150,
+  759: 340
+};
 
+// ราคาพรีออเดอร์ (Preorder)
+const preorderPrices = {
+  66: 30,
+  203: 90,
+  335: 140,
+  759: 320
+};
+
+
+  // ตารางส่วนลด (Discount Table)
   const discountTable = {
-    66: {p3:31, p10:29},
-    203: {p3:88, p10:82},
-    335: {p3:146, p10:140},
-    759: {p3:295, p10:275},
-    2227: {p3:880, p10:820},
-    3663: {p3:1460, p10:1370},
-    7249: {p3:2920, p10:2740}
+    normal: {
+      66:   { p3: 31,  p10: 29 },
+      203:  { p3: 88,  p10: 82 },
+      335:  { p3: 146, p10: 140 },
+      759:  { p3: 295, p10: 275 },
+      2227: { p3: 880, p10: 820 },
+      3663: { p3: 1460, p10: 1370 },
+      7249: { p3: 2920, p10: 2740 }
+    },
+    preorder: {
+      66:   { p3: 29,  p10: 27 },
+      203:  { p3: 82,  p10: 77 },
+      335:  { p3: 135, p10: 125 },
+      759:  { p3: 272, p10: 252 },
+      2227: { p3: 820, p10: 760 },
+      3663: { p3: 1360, p10: 1260 },
+      7249: { p3: 2620, p10: 2430 }
+    }
   };
 
   function getPriceTable(priceMode) {
     return priceMode === "preorder" ? preorderPrices : normalPrices;
   }
+
+  function resetDiscountForm() {
+    document.getElementById("discountRows").innerHTML = "";
+    rowCount = 0;
+  }
+
 
 // ===== ส่วนที่ 2: โค้ดสร้าง dropdown dynamic =====
 const packs = [66, 203, 335, 759, 2227, 3663, 7249];
@@ -134,8 +160,9 @@ for (let i = 0; i < 5; i++) {
     let basePrice = getPriceTable(document.getElementById("priceMode").value)[pack] || 0;
     let finalPrice = basePrice;
 
-    if (choice === "3") finalPrice = discountTable[pack].p3;
-    else if (choice === "10") finalPrice = discountTable[pack].p10;
+    if (choice === "3") finalPrice = discountTable[priceMode][pack].p3;
+else if (choice === "10") finalPrice = discountTable[priceMode][pack].p10;
+
 
     totalPrice += finalPrice;
     totalEchoes += pack;
@@ -252,6 +279,7 @@ for (let i = 0; i < 5; i++) {
 </script>
 </body>
 </html>
+
 
 
 
