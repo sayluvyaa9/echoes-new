@@ -282,26 +282,41 @@ function generateOptions(mode, value, priceMode) {
   let priceTable = getPriceTable(priceMode);
   let options = [];
 
-  packs.forEach(pack => {
-    let price = priceTable[pack] || 0;
-    let topup = echoTopup[pack] || 0;
+  // กำหนดแพ็กที่ใช้ตามโหมด
+  let usablePacks = (mode === "discount") 
+    ? [66, 203, 335, 759, 2227, 3663, 7249] 
+    : [66, 203, 335, 759];
 
-    options.push({
-      desc: `แพ็ก ${pack}`,
-      echoes: pack,
-      price: price,
-      topup: topup,
-      packs: 1
-    });
-  });
+  // ลองรวมแพ็กหลายอัน (brute force 1–4 แพ็ก)
+  for (let p1 of usablePacks) {
+    for (let p2 of usablePacks) {
+      for (let p3 of usablePacks) {
+        for (let p4 of usablePacks) {
+          let echoes = p1 + p2 + p3 + p4;
+          let price = (priceTable[p1]||0) + (priceTable[p2]||0) + (priceTable[p3]||0) + (priceTable[p4]||0);
+          let topup = (echoTopup[p1]||0) + (echoTopup[p2]||0) + (echoTopup[p3]||0) + (echoTopup[p4]||0);
+
+          options.push({
+            desc: `แพ็ก ${p1}+${p2}+${p3}+${p4}`,
+            echoes: echoes,
+            price: price,
+            topup: topup,
+            packs: 4
+          });
+        }
+      }
+    }
+  }
 
   return options;
 }
 
 
+
 </script>
 </body>
 </html>
+
 
 
 
