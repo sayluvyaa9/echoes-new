@@ -277,11 +277,32 @@ for (let i = 0; i < 5; i++) {
   html += "</tbody></table>";
   document.getElementById("result").innerHTML = html;
 }
+  
+function generateOptions(mode, value, priceMode) {
+  let priceTable = getPriceTable(priceMode);
+  let options = [];
+
+  packs.forEach(pack => {
+    let price = priceTable[pack] || 0;
+    let topup = echoTopup[pack] || 0;
+
+    options.push({
+      desc: `แพ็ก ${pack}`,
+      echoes: pack,
+      price: price,
+      topup: topup,
+      packs: 1
+    });
+  });
+
+  return options;
+}
 
 
 </script>
 </body>
 </html>
+
 
 
 
