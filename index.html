@@ -38,16 +38,11 @@
         <input type="number" id="echoesInput" class="form-control" placeholder="เช่น 833 หรือ 1759 หรือ 1000">
       </div>
 
-      <button class="btn btn-primary w-100" onclick="calculate()">คำนวณ</button>
+      <!-- ปุ่มคำนวณเดียว -->
       <button class="btn btn-primary w-100" onclick="calculate()">คำนวณ</button>
 
-<!-- ตารางเลือกส่วนลด -->
-<div id="discountTable" class="mt-3"></div>
-
-<div class="mt-4">
-  <h5>ผลลัพธ์:</h5>
-  <div id="result" class="bg-white p-3 border rounded"></div>
-</div>
+      <!-- ตารางเลือกส่วนลด -->
+      <div id="discountTable" class="mt-3"></div>
 
       <div class="mt-4">
         <h5>ผลลัพธ์:</h5>
@@ -77,50 +72,82 @@
     return priceMode === "preorder" ? preorderPrices : normalPrices;
   }
 
-  function generateOptions(mode, target, priceMode) {
-    let options = [];
-    let prices = getPriceTable(priceMode);
-    let maxBig = 0;
+  // ===== ส่วนลด: สร้างตารางพร้อมช่องจำนวน =====
+  function showDiscountOptions(priceMode) {
+    let packs = Object.keys(discountTable).map(Number);
+    let html = "<table class='table table-bordered'><thead><tr><th>แพ็ก</th><th>ราคาปกติ</th><th>จำนวน</th><th>เลือกส่วนลด</th></tr></thead><tbody>";
 
-    if (mode === "budget") {
-      maxBig = Math.floor(target / (prices[759]||759)) + 5;
-    } else if (mode === "buttons") {
-      maxBig = Math.floor(target / 759) + 5;
-    } else if (mode === "topup") {
-      maxBig = Math.floor(target / echoTopup[759]) + 5;
-    }
+    packs.forEach(pack => {
+      let basePrice = getPriceTable(priceMode)[pack] || 0;
+      html += `<tr>
+        <td>${pack}</td>
+        <td>${basePrice} บาท</td>
+        <td><input type="number" id="qty-${pack}" class="form-control" value="0" min="0"></td>
+        <td>
+          <select id="discount-${pack}" class="form-select">
+            <option value="none">ไม่ใช้ส่วนลด</option>
+            <option value="3">3%</option>
+            <option value="10">10%</option>
+          </select>
+        </td>
+      </tr>`;
+    });
 
-    for (let c66=0;c66<=2;c66++) {
-      for (let c203=0;c203<=1;c203++) {
-        for (let c335=0;c335<=1;c335++) {
-          for (let c759=0;c759<=maxBig;c759++) {
-            let echoes = c66*66 + c203*203 + c335*335 + c759*759;
-            let topup = c66*echoTopup[66] + c203*echoTopup[203] + c335*echoTopup[335] + c759*echoTopup[759];
-
-            let price759 = prices[759]||759;
-            if (priceMode === "preorder") {
-              if (c759 >= 25) price759 = 275;
-              else if (c759 >= 15) price759 = 278;
-            }
-
-            let price = (c66*(prices[66]||0)) + (c203*(prices[203]||0)) + (c335*(prices[335]||0)) + (c759*price759);
-
-            let desc = `${c759>0?`759x${c759} `:""}${c335>0?`335x${c335} `:""}${c203>0?`203x${c203} `:""}${c66>0?`66x${c66}`:""}`.trim();
-            if (!desc) continue;
-
-            let packs = c66 + c203 + c335 + c759; // จำนวนแพ็กที่ซื้อรวม
-
-if (mode==="buttons" && echoes>=target) options.push({desc,echoes,topup,price,packs});
-if (mode==="topup" && topup>=target) options.push({desc,echoes,topup,price,packs});
-if (mode==="budget") options.push({desc,echoes,topup,price,packs});
-
-          }
-        }
-      }
-    }
-    return options;
+    html += "</tbody></table>";
+    document.getElementById("discountTable").innerHTML = html;
   }
 
+  // ===== ส่วนลด: คำนวณตามจำนวนและส่วนลด =====
+  function applyDiscounts() {
+    let packs = Object.keys(discountTable).map(Number);
+    let totalPrice = 0, totalEchoes = 0, totalTopup = 0, totalPacks = 0;
+    let rows = "";
+
+    packs.forEach(pack => {
+      let qty = parseInt(document.getElementById(`qty-${pack}`).value) || 0;
+      let choice = document.getElementById(`discount-${pack}`).value;
+      let basePrice = getPriceTable(document.getElementById("priceMode").value)[pack] || 0;
+      let finalPrice = basePrice;
+
+      if (choice === "3") finalPrice = discountTable[pack].p3;
+      else if (choice === "10") finalPrice = discountTable[pack].p10;
+
+      if (qty > 0) {
+        totalPrice += finalPrice * qty;
+        totalEchoes += pack * qty;
+        totalTopup += (echoTopup[pack] || 0) * qty;
+        totalPacks += qty;
+        rows += `<tr><td>${pack}</td><td>${basePrice}</td><td>${finalPrice}</td><td>${qty}</td></tr>`;
+      }
+    });
+
+    let html = "<table class='table table-bordered'><thead><tr><th>แพ็ก</th><th>ราคาปกติ</th><th>ราคาหลังส่วนลด</th><th>จำนวน</th></tr></thead><tbody>";
+    html += rows + "</tbody></table>";
+    html += `<p>รวมราคา: ${totalPrice} บาท</p>`;
+    html += `<p>กระดุมรวม: ${totalEchoes}</p>`;
+    html += `<p>ยอดเติมเสียงสะท้อนรวม: ${totalTopup}</p>`;
+    html += `<p>จำนวนสิทธิ์สุ่มที่ได้: ${totalPacks}</p>`;
+    document.getElementById("result").innerHTML = html;
+  }
+
+  // ===== ฟังก์ชันหลัก =====
+  function calculate() {
+    let mode = document.getElementById("modeSelect").value;
+    let priceMode = document.getElementById("priceMode").value;
+
+    if (mode === "buttons") {
+      calculateButtons(priceMode);
+    } else if (mode === "topup") {
+      calculateTopup(priceMode);
+    } else if (mode === "budget") {
+      calculateBudget(priceMode);
+    } else if (mode === "discount") {
+      showDiscountOptions(priceMode);
+      applyDiscounts();
+    }
+  }
+
+  // 
   function calculateButtons(priceMode) {
     let needed = parseInt(document.getElementById("echoesInput").value);
     if (isNaN(needed) || needed <= 0) {
@@ -178,116 +205,6 @@ if (mode==="budget") options.push({desc,echoes,topup,price,packs});
 }
 
 
-  function calculateDiscount(priceMode) {
-    let packs = Object.keys(discountTable).map(Number);
-    let totalPrice = 0, totalEchoes = 0, totalTopup = 0, totalPacks = 0;
-    let rows = "";
-
-    packs.forEach(pack=>{
-      let choice = "none"; // ในเวอร์ชันนี้สามารถปรับ UI ให้เลือกส่วนลดได้
-      let basePrice = getPriceTable(priceMode)[pack] || 0;
-      let finalPrice = basePrice;
-
-      if (choice === "3") finalPrice = discountTable[pack].p3;
-      else if (choice === "10") finalPrice = discountTable[pack].p10;
-
-      if (choice !== "none") {
-        totalPrice += finalPrice;
-        totalEchoes += pack;
-        totalTopup += echoTopup[pack] || 0;
-        totalPacks += 1;
-        rows += `<tr><td>${pack}</td><td>${basePrice}</td><td>${finalPrice}</td></tr>`;
-      }
-    });
-
-    let html = "<table class='table table-bordered'><thead><tr><th>แพ็ก</th><th>ราคาปกติ</th><th>ราคาหลังส่วนลด</th></tr></thead><tbody>";
-    html += rows + "</tbody></table>";
-    html += `<p>รวมราคา: ${totalPrice} บาท</p>`;
-    html += `<p>กระดุมรวม: ${totalEchoes}</p>`;
-    html += `<p>ยอดเติมเสียงสะท้อนรวม: ${totalTopup}</p>`;
-    html += `<p>จำนวนสิทธิ์สุ่มที่ได้: ${totalPacks}</p>`;
-    document.getElementById("result").innerHTML = html;
-  }
-
-  function calculate() {
-  let mode = document.getElementById("modeSelect").value;
-  let priceMode = document.getElementById("priceMode").value;
-  let today = new Date();
-  let deadline = new Date("2026-02-23T23:59:59");
-
-  if (mode === "buttons") {
-    calculateButtons(priceMode);
-  } else if (mode === "topup") {
-    calculateTopup(priceMode);
-  } else if (mode === "budget") {
-    calculateBudget(priceMode);
-  } else if (mode === "discount") {
-    if (today <= deadline) {
-      // สร้างตาราง dropdown ให้เลือกส่วนลด
-      showDiscountOptions(priceMode);
-      // คำนวณทันทีจากสิ่งที่เลือก
-      applyDiscounts();
-    } else {
-      document.getElementById("result").innerHTML =
-        "<p>สิทธิ์ส่วนลดหมดเขตแล้ว ไม่สามารถใช้งานได้</p>";
-    }
-  }
-}
-
-
-function showDiscountOptions(priceMode) {
-  let packs = Object.keys(discountTable).map(Number);
-  let html = "<table class='table table-bordered'><thead><tr><th>แพ็ก</th><th>ราคาปกติ</th><th>เลือกส่วนลด</th></tr></thead><tbody>";
-
-  packs.forEach(pack => {
-    let basePrice = getPriceTable(priceMode)[pack] || 0;
-    html += `<tr>
-      <td>${pack}</td>
-      <td>${basePrice} บาท</td>
-      <td>
-        <select id="discount-${pack}" class="form-select">
-          <option value="none">ไม่ใช้ส่วนลด</option>
-          <option value="3">3%</option>
-          <option value="10">10%</option>
-        </select>
-      </td>
-    </tr>`;
-  });
-
-  html += "</tbody></table>";
-  document.getElementById("discountTable").innerHTML = html;
-}
-
-function applyDiscounts() {
-  let packs = Object.keys(discountTable).map(Number);
-  let totalPrice = 0, totalEchoes = 0, totalTopup = 0, totalPacks = 0;
-  let rows = "";
-
-  packs.forEach(pack => {
-    let choice = document.getElementById(`discount-${pack}`).value;
-    let basePrice = getPriceTable(document.getElementById("priceMode").value)[pack] || 0;
-    let finalPrice = basePrice;
-
-    if (choice === "3") finalPrice = discountTable[pack].p3;
-    else if (choice === "10") finalPrice = discountTable[pack].p10;
-
-    if (choice !== "none") {
-      totalPrice += finalPrice;
-      totalEchoes += pack;
-      totalTopup += echoTopup[pack] || 0;
-      totalPacks += 1;
-      rows += `<tr><td>${pack}</td><td>${basePrice}</td><td>${finalPrice}</td></tr>`;
-    }
-  });
-
-  let html = "<table class='table table-bordered'><thead><tr><th>แพ็ก</th><th>ราคาปกติ</th><th>ราคาหลังส่วนลด</th></tr></thead><tbody>";
-  html += rows + "</tbody></table>";
-  html += `<p>รวมราคา: ${totalPrice} บาท</p>`;
-  html += `<p>กระดุมรวม: ${totalEchoes}</p>`;
-  html += `<p>ยอดเติมเสียงสะท้อนรวม: ${totalTopup}</p>`;
-  html += `<p>จำนวนสิทธิ์สุ่มที่ได้: ${totalPacks}</p>`;
-  document.getElementById("result").innerHTML = html;
-}
-
 </script>
-
+</body>
+</html>
