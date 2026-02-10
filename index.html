@@ -42,12 +42,17 @@
       <button class="btn btn-primary w-100" onclick="calculate()">คำนวณ</button>
 
      <!-- ตารางเลือกส่วนลดแบบ dynamic -->
-<div id="discountFormContainer" class="mt-3">
+<div id="discountFormContainer" class="mt-3" style="display:none;">
   <form id="discountForm">
     <div id="discountRows"></div>
     <button type="button" class="btn btn-secondary mt-2" onclick="addRow()">เพิ่มช่อง</button>
   </form>
 </div>
+
+      function resetDiscountForm() {
+  document.getElementById("discountRows").innerHTML = "";
+  rowCount = 0;
+}
 
 
       <div class="mt-4">
@@ -152,18 +157,37 @@ for (let i = 0; i < 5; i++) {
   
   // ===== ฟังก์ชันหลัก =====
   function calculate() {
-    let mode = document.getElementById("modeSelect").value;
-    let priceMode = document.getElementById("priceMode").value;
+  let mode = document.getElementById("modeSelect").value;
+  let priceMode = document.getElementById("priceMode").value;
 
-    if (mode === "buttons") {
-      calculateButtons(priceMode);
-    } else if (mode === "topup") {
-      calculateTopup(priceMode);
-    } else if (mode === "budget") {
-      calculateBudget(priceMode);
-    } else if (mode === "discount") {
-  applyDiscounts();
+  if (mode === "buttons") {
+    document.getElementById("discountFormContainer").style.display = "none";
+    resetDiscountForm();
+    calculateButtons(priceMode);
+  } else if (mode === "topup") {
+    document.getElementById("discountFormContainer").style.display = "none";
+    resetDiscountForm();
+    calculateTopup(priceMode);
+  } else if (mode === "budget") {
+    document.getElementById("discountFormContainer").style.display = "none";
+    resetDiscountForm();
+    calculateBudget(priceMode);
+  } else if (mode === "discount") {
+    document.getElementById("discountFormContainer").style.display = "block";
+
+    // ถ้ายังไม่มีช่อง ให้สร้าง 5 ช่องเริ่มต้น
+    if (rowCount === 0) {
+        for (let i = 0; i < 5; i++) {
+            addRow();
+        }
+    }
+
+    applyDiscounts();
 }
+
+  
+
+
 
   }
 
@@ -228,5 +252,6 @@ for (let i = 0; i < 5; i++) {
 </script>
 </body>
 </html>
+
 
 
