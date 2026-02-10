@@ -215,10 +215,6 @@ for (let i = 0; i < 5; i++) {
     applyDiscounts();
 }
 
-  
-
-
-
   }
 
   // 
@@ -228,10 +224,19 @@ for (let i = 0; i < 5; i++) {
     document.getElementById("result").innerText = "กรุณากรอกจำนวนกระดุมที่ถูกต้อง";
     return;
   }
-  // เลือกเฉพาะสูตรที่ echoes >= needed
+
   let options = generateOptions("buttons", needed).filter(o => o.echoes >= needed);
-  options.sort((a,b) => a.price - b.price);
-  let best = options[0];
+
+  // ถ้ามีสูตรที่ตรงเป๊ะ (echoes == needed) → เลือกสูตรนั้นก่อน
+  let exact = options.filter(o => o.echoes === needed);
+  let best;
+  if (exact.length > 0) {
+    best = exact.sort((a,b) => a.price - b.price)[0];
+  } else {
+    // ถ้าไม่มีสูตรตรงเป๊ะ → เลือกสูตรที่ echoes > needed และราคาต่ำที่สุด
+    best = options.sort((a,b) => a.price - b.price)[0];
+  }
+
   document.getElementById("result").innerHTML = `
     <p>สูตรที่เลือก: ${best.desc}</p>
     <p>รวมทั้งหมด: ${best.echoes} กระดุม</p>
@@ -240,16 +245,26 @@ for (let i = 0; i < 5; i++) {
 }
 
 
- function calculateTopup() {
+
+function calculateTopup() {
   let neededTopup = parseInt(document.getElementById("echoesInput").value);
   if (isNaN(neededTopup) || neededTopup <= 0) {
     document.getElementById("result").innerText = "กรุณากรอกยอดเติมเสียงสะท้อนที่ถูกต้อง";
     return;
   }
-  // เลือกเฉพาะสูตรที่ topup >= neededTopup
+
   let options = generateOptions("topup", neededTopup).filter(o => o.topup >= neededTopup);
-  options.sort((a,b) => a.price - b.price);
-  let best = options[0];
+
+  // ถ้ามีสูตรที่ตรงเป๊ะ (topup == neededTopup) → เลือกสูตรนั้นก่อน
+  let exact = options.filter(o => o.topup === neededTopup);
+  let best;
+  if (exact.length > 0) {
+    best = exact.sort((a,b) => a.price - b.price)[0];
+  } else {
+    // ถ้าไม่มีสูตรตรงเป๊ะ → เลือกสูตรที่ topup > neededTopup และราคาต่ำที่สุด
+    best = options.sort((a,b) => a.price - b.price)[0];
+  }
+
   document.getElementById("result").innerHTML = `
     <p>สูตรที่เลือก: ${best.desc}</p>
     <p>รวมทั้งหมด: ${best.echoes} กระดุม</p>
@@ -257,7 +272,8 @@ for (let i = 0; i < 5; i++) {
     <p>ยอดเติมเสียงสะท้อนรวม: ${best.topup}</p>`;
 }
 
-  function calculateBudget() {
+
+ function calculateBudget() {
   let budget = parseInt(document.getElementById("echoesInput").value);
   if (isNaN(budget) || budget <= 0) {
     document.getElementById("result").innerText = "กรุณากรอกงบประมาณที่ถูกต้อง";
@@ -266,21 +282,22 @@ for (let i = 0; i < 5; i++) {
 
   let options = generateOptions("budget", budget);
 
-  // หาตัวเลือกที่ใกล้เคียงที่สุดในแต่ละกลุ่ม
-  let lower = options.filter(o => o.price < budget)
-                     .sort((a,b) => (budget - a.price) - (budget - b.price))[0];
-  let equal = options.reduce((best,o) =>
-    Math.abs(o.price - budget) < Math.abs((best?.price || 0) - budget) ? o : best, null);
-  let higher = options.filter(o => o.price > budget)
-                      .sort((a,b) => (a.price - budget) - (b.price - budget))[0];
+  // เลือกสูตรที่ใกล้งบที่สุด
+  let best = options.reduce((best,o) => {
+    let diffBest = Math.abs((best?.price||0) - budget);
+    let diffO = Math.abs(o.price - budget);
+    if (diffO < diffBest) return o;
+    if (diffO === diffBest && o.echoes > (best?.echoes||0)) return o;
+    return best;
+  }, null);
 
-  // ถ้า lower กับ equal มีค่าเท่ากัน → แสดงเฉพาะ equal และ higher
-  let showLower = lower && (!equal || lower.price !== equal.price);
+  // เลือกสูตรที่สูงกว่าเล็กน้อย (ถ้ามี)
+  let higherOptions = options.filter(o => o.price > budget);
+  let higher = higherOptions.sort((a,b) => (a.price - budget) - (b.price - budget) || b.echoes - a.echoes)[0];
 
   let html = "<table class='table table-bordered'><thead><tr><th>ตัวเลือก</th><th>สูตร</th><th>ราคา</th><th>กระดุมรวม</th><th>ยอดเติมเสียงสะท้อน</th></tr></thead><tbody>";
-  if (showLower) html += `<tr><td>ต่ำกว่า</td><td>${lower.desc}</td><td>${lower.price} บาท</td><td>${lower.echoes}</td><td>${lower.topup}</td></tr>`;
-  if (equal) html += `<tr><td>ใกล้เคียง/เท่ากับ</td><td>${equal.desc}</td><td>${equal.price} บาท</td><td>${equal.echoes}</td><td>${equal.topup}</td></tr>`;
-  if (higher) html += `<tr><td>สูงกว่าเล็กน้อย</td><td>${higher.desc}</td><td>${higher.price} บาท</td><td>${higher.echoes}</td><td>${higher.topup}</td></tr>`;
+  if (best) html += `<tr><td>ใกล้เคียง/เท่ากับ</td><td>${best.desc}</td><td>${best.price} บาท</td><td>${best.echoes}</td><td>${best.topup}</td></tr>`;
+  if (higher && higher.price !== best.price) html += `<tr><td>สูงกว่าเล็กน้อย</td><td>${higher.desc}</td><td>${higher.price} บาท</td><td>${higher.echoes}</td><td>${higher.topup}</td></tr>`;
   html += "</tbody></table>";
 
   document.getElementById("result").innerHTML = html;
@@ -291,16 +308,11 @@ function generateOptions(mode, target, priceMode) {
   let priceTable = getPriceTable(priceMode);
   let options = [];
 
-  // ใช้แพ็กตามโหมด
-  let usablePacks = (mode === "discount") 
-    ? [66, 203, 335, 759, 2227, 3663, 7249] 
-    : [66, 203, 335, 759];
-
   // ข้อจำกัดความคุ้มค่า
-  let max66 = 2;   // 66 ใช้ได้ไม่เกิน 2
-  let max203 = 1;  // 203 ใช้ได้ไม่เกิน 1
-  let max335 = 1;  // 335 ใช้ได้ไม่เกิน 1
-  let max759 = Math.floor(target / 759) + 5; // เผื่อจำนวนแพ็กใหญ่
+  let max66 = 2;
+  let max203 = 1;
+  let max335 = 1;
+  let max759 = Math.floor(target / 759) + 5;
 
   for (let c66 = 0; c66 <= max66; c66++) {
     for (let c203 = 0; c203 <= max203; c203++) {
@@ -309,12 +321,11 @@ function generateOptions(mode, target, priceMode) {
           let echoes = c66*66 + c203*203 + c335*335 + c759*759;
           let topup = c66*(echoTopup[66]||0) + c203*(echoTopup[203]||0) + c335*(echoTopup[335]||0) + c759*(echoTopup[759]||0);
 
-          // ส่วนลดพิเศษสำหรับแพ็ก 759
+          // ราคาพรีออเดอร์สำหรับแพ็ก 759
           let price759 = priceTable[759] || 0;
-          if (c759 >= 25) {
-            price759 = 275;
-          } else if (c759 >= 15) {
-            price759 = 278;
+          if (priceMode === "preorder") {
+            if (c759 >= 25) price759 = 275;
+            else if (c759 >= 15) price759 = 278;
           }
 
           let price = c66*(priceTable[66]||0) + c203*(priceTable[203]||0) + c335*(priceTable[335]||0) + c759*price759;
@@ -326,23 +337,14 @@ function generateOptions(mode, target, priceMode) {
           if (c203 > 0) descParts.push(`203x${c203}`);
           if (c66 > 0) descParts.push(`66x${c66}`);
           let desc = descParts.join(" ");
-
           if (!desc) continue;
 
           // 🔎 ตัวกรองความคุ้มค่า
-          let isValid = true;
+          // 1. ถ้าราคา >= ราคาแพ็ก 759 แต่ echoes <= 759 → ไม่คุ้ม
+          if (price >= (priceTable[759]||0) && echoes <= 759) continue;
 
-          // ถ้ามีสูตรที่ราคา >= ราคาแพ็ก 759 แต่ echoes <= 759 → ไม่คุ้ม
-          if (price >= (priceTable[759]||0) && echoes <= 759) {
-            isValid = false;
-          }
-
-          // สูตรที่เป็น 335+203+66x2 → ไม่คุ้มเมื่อเทียบกับ 759
-          if (c335 === 1 && c203 === 1 && c66 === 2 && c759 === 0) {
-            isValid = false;
-          }
-
-          if (!isValid) continue;
+          // 2. สูตรที่เป็น 335+203+66x2 → ไม่คุ้มเมื่อเทียบกับ 759
+          if (c335 === 1 && c203 === 1 && c66 === 2 && c759 === 0) continue;
 
           // เพิ่มเข้า options ตามโหมด
           if (mode === "buttons" && echoes >= target) {
@@ -367,9 +369,11 @@ function generateOptions(mode, target, priceMode) {
 
 
 
+
 </script>
 </body>
 </html>
+
 
 
 
