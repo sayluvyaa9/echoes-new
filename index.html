@@ -41,15 +41,13 @@
       <button class="btn btn-primary w-100" onclick="calculate()">คำนวณ</button>
       <button class="btn btn-primary w-100" onclick="calculate()">คำนวณ</button>
 
-      <!-- ตารางเลือกส่วนลด -->
-      <div id="discountTable" class="mt-3"></div>
-      <button class="btn btn-secondary mt-2" onclick="applyDiscounts()">คำนวณส่วนลด</button>
+<!-- ตารางเลือกส่วนลด -->
+<div id="discountTable" class="mt-3"></div>
 
-      <div class="mt-4">
-        <h5>ผลลัพธ์:</h5>
-        <div id="result" class="bg-white p-3 border rounded"></div>
-      </div>
-
+<div class="mt-4">
+  <h5>ผลลัพธ์:</h5>
+  <div id="result" class="bg-white p-3 border rounded"></div>
+</div>
 
       <div class="mt-4">
         <h5>ผลลัพธ์:</h5>
@@ -212,26 +210,30 @@ if (mode==="budget") options.push({desc,echoes,topup,price,packs});
   }
 
   function calculate() {
-    let mode = document.getElementById("modeSelect").value;
-    let priceMode = document.getElementById("priceMode").value;
-    let today = new Date();
-    let deadline = new Date("2026-02-23T23:59:59");
+  let mode = document.getElementById("modeSelect").value;
+  let priceMode = document.getElementById("priceMode").value;
+  let today = new Date();
+  let deadline = new Date("2026-02-23T23:59:59");
 
-    if (mode === "buttons") {
-  calculateButtons(priceMode);
-} else if (mode === "topup") {
-  calculateTopup(priceMode);
-} else if (mode === "budget") {
-  calculateBudget(priceMode);
-} else if (mode === "discount") {
-  if (today <= deadline) {
-    // เรียกฟังก์ชันสร้างตารางเลือกส่วนลด
-    showDiscountOptions(priceMode);
-  } else {
-    document.getElementById("result").innerHTML =
-      "<p>สิทธิ์ส่วนลดหมดเขตแล้ว ไม่สามารถใช้งานได้</p>";
+  if (mode === "buttons") {
+    calculateButtons(priceMode);
+  } else if (mode === "topup") {
+    calculateTopup(priceMode);
+  } else if (mode === "budget") {
+    calculateBudget(priceMode);
+  } else if (mode === "discount") {
+    if (today <= deadline) {
+      // สร้างตาราง dropdown ให้เลือกส่วนลด
+      showDiscountOptions(priceMode);
+      // คำนวณทันทีจากสิ่งที่เลือก
+      applyDiscounts();
+    } else {
+      document.getElementById("result").innerHTML =
+        "<p>สิทธิ์ส่วนลดหมดเขตแล้ว ไม่สามารถใช้งานได้</p>";
+    }
   }
 }
+
 
 function showDiscountOptions(priceMode) {
   let packs = Object.keys(discountTable).map(Number);
@@ -288,3 +290,4 @@ function applyDiscounts() {
 }
 
 </script>
+
