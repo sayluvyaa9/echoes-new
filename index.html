@@ -41,8 +41,14 @@
       <!-- ปุ่มคำนวณเดียว -->
       <button class="btn btn-primary w-100" onclick="calculate()">คำนวณ</button>
 
-      <!-- ตารางเลือกส่วนลด -->
-      <div id="discountTable" class="mt-3"></div>
+     <!-- ตารางเลือกส่วนลดแบบ dynamic -->
+<div id="discountFormContainer" class="mt-3">
+  <form id="discountForm">
+    <div id="discountRows"></div>
+    <button type="button" class="btn btn-secondary mt-2" onclick="addRow()">เพิ่มช่อง</button>
+  </form>
+</div>
+
 
       <div class="mt-4">
         <h5>ผลลัพธ์:</h5>
@@ -71,7 +77,51 @@
   function getPriceTable(priceMode) {
     return priceMode === "preorder" ? preorderPrices : normalPrices;
   }
+function getPriceTable(priceMode) {
+    return priceMode === "preorder" ? preorderPrices : normalPrices;
+}
 
+// ===== ส่วนที่ 2: โค้ดสร้าง dropdown dynamic =====
+const packs = [66, 203, 335, 759, 2227, 3663, 7249];
+const discounts = ["none", "3", "10"];
+
+function createRow(index) {
+  return `
+    <div class="row mb-2" id="row-${index}">
+      <div class="col-md-6">
+        <select class="form-select" id="pack-${index}">
+          <option value="">-- เลือกแพ็ก --</option>
+          ${packs.map(p => `<option value="${p}">${p}</option>`).join("")}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <select class="form-select" id="discount-${index}">
+          <option value="none">ไม่ใช้ส่วนลด</option>
+          <option value="3">3%</option>
+          <option value="10">10%</option>
+        </select>
+      </div>
+    </div>
+  `;
+}
+
+let rowCount = 0;
+function addRow() {
+  rowCount++;
+  document.getElementById("discountRows").insertAdjacentHTML("beforeend", createRow(rowCount));
+}
+
+// เริ่มต้นมี 5 ช่องว่างเปล่า
+for (let i = 0; i < 5; i++) {
+  addRow();
+}
+
+// ===== ส่วนลด: สร้างตารางพร้อมตัวจำนวน =====
+function showDiscountOptions(priceMode) {
+   ...
+}
+
+  
   // ===== ส่วนลด: สร้างตารางพร้อมช่องจำนวน =====
   function showDiscountOptions(priceMode) {
     let packs = Object.keys(discountTable).map(Number);
@@ -208,3 +258,4 @@
 </script>
 </body>
 </html>
+
