@@ -57,13 +57,12 @@
       <button class="btn btn-primary w-100 mt-3" onclick="calculate()">คำนวณ</button>
 
       <div class="mt-4">
-        <h5>ผลลัพธ์:</h5>
+        <h5>ผลลัพธ์ :</h5>
         <div id="result" class="bg-white p-3 border rounded"></div>
       </div>
     </div>
   </div>
 </div>
-
 <script>
   // ราคาพร้อมเติม
   const topupDiscount = {
@@ -90,7 +89,6 @@
   const echoTopup = { 66: 60, 203: 185, 335: 305, 759: 690 };
   const prices = { 66: 30, 203: 85, 335: 140, 759: 280 };
 
-  // สร้างตารางเลือกแพ็กและส่วนลด
   const discountPacks = [66,203,335,759,2227,3663,7249];
   const discountRates = ["ไม่ใช้ส่วนลด","3%","10%"];
 
@@ -162,12 +160,7 @@
       if (rate==="10%") discountPrice = data["10%"];
       if (rate==="ไม่ใช้ส่วนลด" && basePrice===null) return;
 
-      results.push({
-        pack,
-        base: basePrice,
-        discount: discountPrice,
-        topup: data.topup
-      });
+      results.push({ pack, base: basePrice, discount: discountPrice, topup: data.topup });
     });
 
     let totalBase = results.reduce((sum,r)=>sum+(r.base||0),0);
@@ -175,12 +168,22 @@
     let totalEchoes = results.reduce((sum,r)=>sum+r.pack,0);
     let totalTopup = results.reduce((sum,r)=>sum+r.topup,0);
 
-    let html = "<table class='table table-bordered'><thead><tr><th>แพ็ก</th><th>ราคาปกติ</th><th>ราคาหลังส่วนลด</th><th>ยอดเติม</th></
     let html = "<table class='table table-bordered'><thead><tr><th>แพ็ก</th><th>ราคาปกติ</th><th>ราคาหลังส่วนลด</th><th>ยอดเติม</th></tr></thead><tbody>";
     results.forEach(r=>{
-      html += `<tr><td>${r.pack}</td><td>${r.base!==null?r.base:"-"}</td><td>${r.discount}</td><td>${r.topup}</td></tr>`;
+      html += `<tr>
+        <td>${r.pack}</td>
+        <td>${r.base!==null ? r.base : "-"}</td>
+        <td>${r.discount}</td>
+        <td>${r.topup}</td>
+      </tr>`;
     });
-    html += `<tr><td>รวม</td><td>${totalBase}</td><td>${totalDiscount}</td><td>${totalTopup}</td></tr>`;
+
+    html += `<tr>
+      <td>รวม</td>
+      <td>${totalBase}</td>
+      <td>${totalDiscount}</td>
+      <td>${totalTopup}</td>
+    </tr>`;
     html += "</tbody></table>";
 
     html += `<p>สูตรการเติมที่ใช้: ${results.map(r=>r.pack+"x1").join(", ")}</p>`;
@@ -191,48 +194,7 @@
     document.getElementById("result").innerHTML = html;
   }
 
-  // ฟังก์ชันคำนวณโหมดเดิม
-  function generateOptions(mode, target) {
-    let options = [];
-    let maxBig = 0;
-
-    if (mode === "budget") {
-      maxBig = Math.floor(target / prices[759]) + 5;
-    } else if (mode === "buttons") {
-      maxBig = Math.floor(target / 759) + 5;
-    } else if (mode === "topup") {
-      maxBig = Math.floor(target / echoTopup[759]) + 5;
-    }
-
-    for (let c66=0;c66<=2;c66++) {
-      for (let c203=0;c203<=1;c203++) {
-        for (let c335=0;c335<=1;c335++) {
-          for (let c759=0;c759<=maxBig;c759++) {
-            let echoes = c66*66 + c203*203 + c335*335 + c759*759;
-            let topup = c66*echoTopup[66] + c203*echoTopup[203] + c335*echoTopup[335] + c759*echoTopup[759];
-
-            let price759 = prices[759];
-            if (c759 >= 25) {
-              price759 = 275;
-            } else if (c759 >= 15) {
-              price759 = 278;
-            }
-
-            let price = c66*prices[66] + c203*prices[203] + c335*prices[335] + c759*price759;
-
-            let desc = `${c759>0?`759x${c759} `:""}${c335>0?`335x${c335} `:""}${c203>0?`203x${c203} `:""}${c66>0?`66x${c66}`:""}`.trim();
-            if (!desc) continue;
-
-            if (mode==="buttons" && echoes>=target) options.push({desc,echoes,topup,price});
-            if (mode==="topup" && topup>=target) options.push({desc,echoes,topup,price});
-            if (mode==="budget") options.push({desc,echoes,topup,price});
-          }
-        }
-      }
-    }
-    return options;
-  }
-
+  // ฟังก์ชันคำนวณโหมดกระดุม
   function calculateButtons() {
     let needed = parseInt(document.getElementById("echoesInput").value);
     if (isNaN(needed) || needed <= 0) {
@@ -249,6 +211,7 @@
       <p>ยอดเติมเสียงสะท้อนรวม: ${best.topup}</p>`;
   }
 
+  // ฟังก์ชันคำนวณโหมดยอดเติม
   function calculateTopup() {
     let neededTopup = parseInt(document.getElementById("echoesInput").value);
     if (isNaN(neededTopup) || neededTopup <= 0) {
@@ -265,6 +228,7 @@
       <p>ยอดเติมเสียงสะท้อนรวม: ${best.topup}</p>`;
   }
 
+  // ฟังก์ชันคำนวณโหมดงบประมาณ
   function calculateBudget() {
     let budget = parseInt(document.getElementById("echoesInput").value);
     if (isNaN(budget) || budget <= 0) {
@@ -282,6 +246,7 @@
     if (equal) html += `<tr><td>ใกล้เคียง/เท่ากับ</td><td>${equal.desc}</td><td>${equal.price} บาท</td><td>${equal.echoes}</td><td>${equal.topup}</td></tr>`;
     if (higher) html += `<tr><td>สูงกว่าเล็กน้อย</td><td>${higher.desc}</td><td>${higher.price} บาท</td><td>${higher.echoes}</td><td>${higher.topup}</td></tr>`;
     html += "</tbody></table>";
+
     document.getElementById("result").innerHTML = html;
   }
 
