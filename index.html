@@ -98,6 +98,15 @@
     let packCell = document.createElement("td");
     let packSelect = document.createElement("select");
     packSelect.className = "form-select";
+
+    // เพิ่มตัวเลือกเริ่มต้น "เลือกแพ็ก"
+    let defaultOpt = document.createElement("option");
+    defaultOpt.value = "";
+    defaultOpt.textContent = "เลือกแพ็ก";
+    defaultOpt.selected = true;
+    defaultOpt.disabled = true;
+    packSelect.appendChild(defaultOpt);
+
     discountPacks.forEach(p=>{
       let opt = document.createElement("option");
       opt.value = p;
@@ -147,9 +156,11 @@
     let results = [];
 
     rows.forEach(r=>{
-      let pack = parseInt(r.children[0].querySelector("select").value);
-      let rate = r.children[1].querySelector("select").value;
+      let pack = r.children[0].querySelector("select").value;
+      if (!pack) return; // ข้ามถ้าไม่ได้เลือกแพ็กจริง
+      pack = parseInt(pack);
 
+      let rate = r.children[1].querySelector("select").value;
       let dataset = (priceType==="topup"?topupDiscount:preorderDiscount);
       let data = dataset[pack];
       if (!data) return;
