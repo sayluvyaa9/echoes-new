@@ -33,18 +33,13 @@
 <div id="gachaInput" style="display:none;">
 
   <div class="mb-3">
-    <label class="form-label">จำนวนแพ็กพิเศษ (แพ็กละ 576 Echoes ได้ 10 ลูก)</label>
+    <label class="form-label">จำนวนแพ็กพิเศษ (576 Echoes ได้ 10 ลูก ใส่จำนวนแพ็ก เช่น 1) </label>
     <input type="number" id="specialPack" class="form-control">
   </div>
 
   <div class="mb-3">
-    <label class="form-label">จำนวนลูกปกติ (ลูกละ 96 Echoes)</label>
+    <label class="form-label">จำนวนลูกปกติที่ต้องการ (ลูกละ 96 Echoes ใส่จำนวน เช่น 10)</label>
     <input type="number" id="normalBalls" class="form-control">
-  </div>
-
-  <div class="mb-3">
-    <label class="form-label">จำนวนครั้งสุ่มสะสม (6 ครั้ง = ได้ลูกฟรี 1 ลูก)</label>
-    <input type="number" id="totalPulls" class="form-control">
   </div>
 
 </div>
@@ -177,9 +172,6 @@
 
   let specialPack = parseInt(document.getElementById("specialPack").value) || 0;
   let normalBalls = parseInt(document.getElementById("normalBalls").value) || 0;
-  let totalPulls = parseInt(document.getElementById("totalPulls").value) || 0;
-
-  let freeBalls = Math.floor(totalPulls / 6);
 
   // Echoes ที่ต้องใช้จริง
   let echoesNeeded = (specialPack * 576) + (normalBalls * 96);
@@ -202,7 +194,7 @@
       .replace(/\s+/g," ")
       .trim();
 
-  let totalBalls = (specialPack * 10) + normalBalls + freeBalls;
+  let totalBalls = (specialPack * 10) + normalBalls;
 
   document.getElementById("result").innerHTML = `
     <h5>แพ็กที่ใช้:</h5>
@@ -215,7 +207,6 @@
     <hr>
 
     <p>จำนวนลูกกาชารวม: <strong>${totalBalls}</strong> ลูก</p>
-    <p>ลูกที่จะได้จากแก่น: ${freeBalls} ลูก</p>
   `;
 }
   
@@ -364,6 +355,7 @@ function calculateDiscount() {
 
 </body>
 </html>
+
 
 
 
