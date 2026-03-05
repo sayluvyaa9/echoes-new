@@ -173,7 +173,7 @@
     document.getElementById("result").innerHTML = html;
   }
 
-  function calculateGacha() {
+ function calculateGacha() {
 
   let specialPack = parseInt(document.getElementById("specialPack").value) || 0;
   let normalBalls = parseInt(document.getElementById("normalBalls").value) || 0;
@@ -181,17 +181,41 @@
 
   let freeBalls = Math.floor(totalPulls / 6);
 
+  // Echoes ที่ต้องใช้จริง
   let echoesNeeded = (specialPack * 576) + (normalBalls * 96);
+
+  if (echoesNeeded <= 0) {
+    document.getElementById("result").innerText = "กรุณากรอกจำนวนที่ต้องการ";
+    return;
+  }
+
+  // ใช้ระบบเดียวกับโหมดกระดุม
+  let options = generateOptions("buttons", echoesNeeded)
+                  .filter(o => o.echoes >= echoesNeeded);
+
+  options.sort((a,b)=>a.price-b.price);
+  let best = options[0];
+
+  // จัดรูปแบบแพ็กให้อ่านง่าย (มีเว้นวรรค)
+  let formattedDesc = best.desc
+      .replace(/x/g," x ")
+      .replace(/\s+/g," ")
+      .trim();
+
   let totalBalls = (specialPack * 10) + normalBalls + freeBalls;
 
   document.getElementById("result").innerHTML = `
-    <h5>ผลคำนวณลูกกาชา</h5>
-    <p>สูตรที่ใช้: (${specialPack}×576) + (${normalBalls}×96)</p>
-    <p>Echoes ที่ต้องใช้: ${echoesNeeded}</p>
-    <p>ลูกจากแพ็ก: ${specialPack * 10}</p>
-    <p>ลูกปกติ: ${normalBalls}</p>
-    <p>ลูกฟรีจากแก่น: ${freeBalls}</p>
-    <p><strong>รวมทั้งหมด: ${totalBalls} ลูก</strong></p>
+    <h5>แพ็กที่ใช้:</h5>
+    <p><strong>${formattedDesc}</strong></p>
+
+    <p>รวมทั้งหมด: ${best.echoes.toLocaleString()} กระดุม</p>
+    <p>ราคารวม: ${best.price.toLocaleString()} บาท</p>
+    <p>ยอดเติมเสียงสะท้อนรวม: ${best.topup.toLocaleString()}</p>
+
+    <hr>
+
+    <p>จำนวนลูกกาชารวม: <strong>${totalBalls}</strong> ลูก</p>
+    <p>ลูกที่จะได้จากแก่น: ${freeBalls} ลูก</p>
   `;
 }
   
@@ -340,6 +364,7 @@ function calculateDiscount() {
 
 </body>
 </html>
+
 
 
 
